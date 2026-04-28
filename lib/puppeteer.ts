@@ -37,9 +37,8 @@ export async function getBrowser(): Promise<Browser> {
         }
       : {
           args: chromium.args,
-          defaultViewport: chromium.defaultViewport,
           executablePath: await chromium.executablePath(),
-          headless: chromium.headless,
+          headless: (chromium as any).headless,
         };
 
     cached.promise = puppeteer.launch(options as any).then((browser) => {
