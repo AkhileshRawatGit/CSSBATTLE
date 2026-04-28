@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Challenge from '@/models/Challenge';
 import { getUserFromRequest } from '@/lib/auth';
-import { writeFile } from 'fs/promises';
-import fs from 'fs';
-import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,24 +24,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Image and title are required' }, { status: 400 });
     }
 
-    // Save image to public/challenges
+    // Convert image to Base64 (to avoid EROFS: read-only file system on Vercel)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filename = `challenge-${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    const challengesDir = path.join(process.cwd(), 'public', 'challenges');
-    
-    // Ensure directory exists
-    if (!fs.existsSync(challengesDir)) {
-      fs.mkdirSync(challengesDir, { recursive: true });
-    }
-
-    const imagePath = path.join(challengesDir, filename);
-    await writeFile(imagePath, buffer);
+    const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`;
 
     const challenge = await Challenge.create({
       title,
       description: description || '',
-      image: `/challenges/${filename}`,
+      image: base64Image,
       difficulty: difficulty || 'medium',
       timeLimit,
       tags: tags ? tags.split(',').map((t: string) => t.trim()) : [],

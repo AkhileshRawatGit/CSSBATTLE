@@ -26,7 +26,7 @@ export default function Home() {
   const [filter, setFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
 
   useEffect(() => {
-    fetch('/api/challenge')
+    fetch('/api/challenge', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         setChallenges(d.challenges || []);

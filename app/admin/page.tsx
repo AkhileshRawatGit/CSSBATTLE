@@ -53,7 +53,7 @@ export default function AdminPage() {
       .catch(() => setLoading(false));
 
     // Fetch global settings
-    fetch('/api/settings')
+    fetch('/api/settings', { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setIsLeaderboardLocked(data.isLeaderboardLocked))
       .catch(() => {});

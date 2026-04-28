@@ -28,9 +28,9 @@ export default function BattlesPage() {
   useEffect(() => {
     // Fetch challenges, user submissions (to keep compatibility), and progress
     Promise.all([
-      fetch('/api/challenge').then(r => r.json()),
-      fetch('/api/submit').then(r => r.json()).catch(() => ({ submissions: [] })),
-      fetch('/api/progress').then(r => r.json()).catch(() => ({ progress: [] }))
+      fetch('/api/challenge', { cache: 'no-store' }).then(r => r.json()),
+      fetch('/api/submit', { cache: 'no-store' }).then(r => r.json()).catch(() => ({ submissions: [] })),
+      fetch('/api/progress', { cache: 'no-store' }).then(r => r.json()).catch(() => ({ progress: [] }))
     ]).then(([challengeData, submissionData, progressData]) => {
       const fetched = challengeData.challenges || [];
       setChallenges(fetched);

@@ -9,6 +9,8 @@ import { getBrowser, submissionLimiter } from '@/lib/puppeteer';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 function calculateScore(visualMatch: number, characterCount: number) {
   // Base score from visual match
   const baseScore = visualMatch * 100; // 0-10000 range

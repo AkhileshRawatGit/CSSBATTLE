@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import Challenge from '@/models/Challenge';
 import { getUserFromRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();

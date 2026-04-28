@@ -31,7 +31,7 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     // Check lock status
-    fetch('/api/settings')
+    fetch('/api/settings', { cache: 'no-store' })
       .then(r => r.json())
       .then(data => setIsLocked(data.isLeaderboardLocked))
       .catch(() => setIsLocked(false));

@@ -85,12 +85,14 @@ export default function EditorPage() {
     const fetchData = async () => {
       try {
         const [cRes, pRes, sRes] = await Promise.all([
-          fetch(`/api/challenge/${params.id}`),
+          fetch(`/api/challenge/${params.id}`, { cache: 'no-store' }),
           fetch(`/api/progress?challengeId=${params.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            cache: 'no-store'
           }),
           fetch(`/api/submit?challengeId=${params.id}&sort=score&limit=1`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            cache: 'no-store'
           })
         ]);
 
