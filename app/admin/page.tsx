@@ -24,6 +24,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isLeaderboardLocked, setIsLeaderboardLocked] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [message, setMessage] = useState('');
 
   // Form state
@@ -142,6 +143,30 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetLeaderboard = async () => {
+    if (!confirm('⚠️ CRITICAL ACTION: This will delete ALL submissions and reset the leaderboard. This cannot be undone. Are you sure?')) {
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const res = await fetch('/api/admin/reset', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage(`✅ Leaderboard reset! Deleted ${data.deletedSubmissions} submissions.`);
+      } else {
+        setMessage(`❌ ${data.error}`);
+      }
+    } catch {
+      setMessage('❌ Reset failed');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (!user?.isAdmin) {
     return (
       <div className="min-h-screen bg-battle-bg flex items-center justify-center">
@@ -199,6 +224,26 @@ export default function AdminPage() {
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isLeaderboardLocked ? 'bg-red-500' : 'bg-green-500'}`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isLeaderboardLocked ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            <div className="card p-5 border-red-500/20 bg-red-500/5 flex items-center justify-between group">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-red-500/10 border-red-500/20">
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">Reset Leaderboard</h3>
+                  <p className="text-battle-muted text-[11px] mt-0.5">Delete all submissions permanently</p>
+                </div>
+              </div>
+              <button
+                onClick={handleResetLeaderboard}
+                disabled={resetting}
+                className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold rounded-lg border border-red-500/30 transition-all disabled:opacity-50"
+              >
+                {resetting ? 'Resetting...' : 'Reset Now'}
               </button>
             </div>
             
