@@ -1,4 +1,6 @@
-import puppeteer, { Browser } from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
+import { Browser } from 'puppeteer-core';
 
 interface PuppeteerCache {
   browser: Browser | null;
@@ -23,23 +25,32 @@ export async function getBrowser(): Promise<Browser> {
   }
 
   if (!cached.promise) {
-    cached.promise = puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
-    }).then((browser) => {
-      cached.browser = browser;
+    const isLocal = process.env.NODE_ENV === 'development' || process.platform === 'win32';
+
+    const options = isLocal
+      ? {
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          executablePath: process.platform === 'win32' 
+            ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+            : '/usr/bin/google-chrome',
+          headless: true,
+        }
+      : {
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless,
+        };
+
+    cached.promise = puppeteer.launch(options as any).then((browser) => {
+      cached.browser = browser as unknown as Browser;
       
       browser.on('disconnected', () => {
         cached.browser = null;
         cached.promise = null;
       });
       
-      return browser;
+      return cached.browser;
     });
   }
 

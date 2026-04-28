@@ -212,6 +212,8 @@ export default function EditorPage() {
           });
 
           if (newSwitches >= 3) {
+            // Remove listener immediately to prevent multiple alerts/calls
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
             alert('🚫 Tab switching limit exceeded! (3/3) Auto-submitting...');
             handleSubmit(true, true);
           }
