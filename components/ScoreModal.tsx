@@ -78,9 +78,15 @@ export default function ScoreModal({
         <h2 className="text-white text-3xl font-black tracking-tight mb-2">
           {isFinal ? 'Final Score!' : 'Check Result'}
         </h2>
-        <div className="text-white/80 text-xl font-medium mb-8">
+        <div className="text-white/80 text-xl font-medium mb-2">
           You scored <span className="text-yellow-400 font-black">{similarity.toFixed(2)}%</span>
         </div>
+        {isFinal && (
+          <div className="text-white/40 text-xs font-bold uppercase tracking-widest mb-8 animate-pulse">
+            Redirecting to home in 5 seconds...
+          </div>
+        )}
+        {!isFinal && <div className="mb-8" />}
 
         {/* Benefits/Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-10 text-left">

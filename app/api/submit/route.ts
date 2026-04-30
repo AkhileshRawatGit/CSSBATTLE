@@ -21,7 +21,7 @@ function calculateScore(visualMatch: number, characterCount: number) {
   // Exponential boost when at 100% match
   let finalScore;
   // 99.4% threshold accounts for sub-pixel anti-aliasing mismatches on the edges of curves
-  if (visualMatch >= 99.3) {
+  if (visualMatch >= 99.4) {
     // Exponential scoring for 100% matches
     const perfectBonus = 10000; // Base for perfect match
     const charBonus = Math.max(0, 2000 - characterCount);
@@ -149,9 +149,9 @@ export async function POST(request: NextRequest) {
                          Math.abs(d1[i+1] - bgG) < 5 && 
                          Math.abs(d1[i+2] - bgB) < 5;
             
-            const isMatch = Math.abs(d1[i] - d2[i]) <= 30 &&
-                            Math.abs(d1[i+1] - d2[i+1]) <= 30 &&
-                            Math.abs(d1[i+2] - d2[i+2]) <= 30;
+            const isMatch = Math.abs(d1[i] - d2[i]) <= 27 &&
+                            Math.abs(d1[i+1] - d2[i+1]) <= 27 &&
+                            Math.abs(d1[i+2] - d2[i+2]) <= 27;
             
             if (isBg) {
               totalBgPixels++;

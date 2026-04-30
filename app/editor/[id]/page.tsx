@@ -176,8 +176,8 @@ export default function EditorPage() {
           // Delay redirect slightly so they see the modal
           setTimeout(() => {
             setShowScoreModal(false);
-            router.push('/battles');
-          }, 10000); // 10 seconds to look at score
+            router.push('/');
+          }, 5000); // 5 seconds to look at score
         }
       } else {
         alert(data.error || 'Submission failed');
@@ -229,7 +229,6 @@ export default function EditorPage() {
 
   const handleTimeUp = useCallback(() => {
     if (!submitted && !user?.isAdmin) {
-      alert('⏰ Time is up! Auto-submitting...');
       handleSubmit(true, true);
     }
   }, [submitted, handleSubmit, user]);
