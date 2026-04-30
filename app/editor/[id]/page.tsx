@@ -197,7 +197,7 @@ export default function EditorPage() {
       if (document.hidden) {
         const newSwitches = tabSwitches + 1;
         setTabSwitches(newSwitches);
-        
+
         try {
           await fetch('/api/progress', {
             method: 'PATCH',
@@ -251,26 +251,26 @@ export default function EditorPage() {
   return (
     <div className="h-screen bg-[#111] flex flex-col overflow-hidden">
       <Navbar />
-      
+
       {/* Timer Bar */}
       <div className="h-10 bg-[#0a0a0f] border-b border-white/5 flex items-center justify-between px-6 fixed top-14 left-0 right-0 z-40">
         <div className="flex items-center gap-4">
           <h2 className="text-sm font-black text-white">{challenge.title}</h2>
           <div className="h-4 w-[1px] bg-white/10" />
-            {!user?.isAdmin && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-[#888888] uppercase tracking-widest">Tab Switches:</span>
-                <span className={`text-xs font-mono font-bold ${tabSwitches >= 2 ? 'text-red-500' : 'text-battle-text'}`}>
-                  {tabSwitches} / 3
-                </span>
-              </div>
-            )}
-          </div>
-          <CountdownTimer 
-            durationSeconds={duration} 
-            onTimeUp={handleTimeUp} 
-            started={timerStarted && !submitted && !user?.isAdmin} 
-          />
+          {!user?.isAdmin && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-[#888888] uppercase tracking-widest">Tab Switches:</span>
+              <span className={`text-xs font-mono font-bold ${tabSwitches >= 2 ? 'text-red-500' : 'text-battle-text'}`}>
+                {tabSwitches} / 3
+              </span>
+            </div>
+          )}
+        </div>
+        <CountdownTimer
+          durationSeconds={duration}
+          onTimeUp={handleTimeUp}
+          started={timerStarted && !submitted && !user?.isAdmin}
+        />
       </div>
 
       {/* ─── Main 3-Column Content ─── */}

@@ -15,11 +15,11 @@ export default function InstructionModal({ isOpen, onClose, onConfirm, challenge
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in" 
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in"
         onClick={onClose}
       />
-      
+
       {/* ModalContent */}
       <div className="relative bg-battle-card border border-battle-border rounded-2xl w-full max-w-lg overflow-hidden animate-slide-up shadow-2xl">
         {/* Header */}
@@ -60,7 +60,7 @@ export default function InstructionModal({ isOpen, onClose, onConfirm, challenge
               <div className="w-full bg-black/30 h-1.5 rounded-full mb-4">
                 <div className="bg-battle-accent h-full rounded-full" style={{ width: '90%' }} />
               </div>
-              
+
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-battle-text">Code Efficiency (Length)</span>
                 <span className="text-sm font-bold text-battle-purple">10%</span>
@@ -78,13 +78,13 @@ export default function InstructionModal({ isOpen, onClose, onConfirm, challenge
 
         {/* Actions */}
         <div className="p-6 pt-2 flex gap-3">
-          <button 
+          <button
             onClick={onClose}
             className="flex-1 px-4 py-3 rounded-xl bg-battle-surface text-battle-text font-bold hover:bg-battle-surface/80 transition-all border border-battle-border"
           >
             Cancel
           </button>
-          <button 
+          <button
             onClick={onConfirm}
             className="flex-2 px-8 py-3 rounded-xl bg-battle-accent text-white font-black hover:scale-105 transition-all shadow-lg glow-accent"
           >
