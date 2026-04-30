@@ -47,6 +47,14 @@ export default function InstructionModal({ isOpen, onClose, onConfirm, challenge
                 <span className="text-battle-accent font-bold">•</span>
                 All colors and shapes must match perfectly for a high score.
               </li>
+              <li className="flex gap-3 text-sm text-battle-muted">
+                <span className="text-battle-accent font-bold">•</span>
+                <span className="text-white font-bold">Mandatory Fullscreen:</span> Exiting fullscreen mode will block the editor.
+              </li>
+              <li className="flex gap-3 text-sm text-battle-muted">
+                <span className="text-battle-accent font-bold">•</span>
+                <span className="text-white font-bold">Anti-Cheat:</span> Right-click and developer shortcuts are disabled.
+              </li>
             </ul>
           </section>
 

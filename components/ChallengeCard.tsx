@@ -48,6 +48,9 @@ export default function ChallengeCard({ challenge, index, isFinished }: Challeng
   };
 
   const handleStartCoding = () => {
+    document.documentElement.requestFullscreen().catch(err => {
+      console.warn("Fullscreen request failed", err);
+    });
     router.push(`/editor/${challenge._id}`);
   };
 

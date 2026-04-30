@@ -64,6 +64,7 @@ export default function EditorPage() {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isFinalSubmission, setIsFinalSubmission] = useState(false);
   const [activeTab, setActiveTab] = useState<'your' | 'global'>('your');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const previewRef = useRef<HTMLIFrameElement>(null);
   const targetRef = useRef<HTMLImageElement>(null);
@@ -226,6 +227,48 @@ export default function EditorPage() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [submitted, timerStarted, challenge, user, token, tabSwitches, handleSubmit]);
+
+  // Anti-Cheat: Fullscreen enforcement
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    // Initial check
+    setIsFullscreen(!!document.fullscreenElement);
+
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Anti-Cheat: Disable shortcuts and context menu
+  useEffect(() => {
+    if (user?.isAdmin || submitted) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S
+      if (
+        e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+        (e.ctrlKey && (e.key === 'u' || e.key === 's'))
+      ) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [user, submitted]);
 
   const handleTimeUp = useCallback(() => {
     if (!submitted && !user?.isAdmin) {
@@ -460,6 +503,28 @@ export default function EditorPage() {
             handleSubmit(false, true);
           }}
         />
+      )}
+
+      {/* Fullscreen enforcement overlay */}
+      {!isFullscreen && !user?.isAdmin && !submitted && timerStarted && (
+        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm">
+          <div className="w-20 h-20 bg-battle-accent/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
+             <svg className="w-10 h-10 text-battle-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+             </svg>
+          </div>
+          <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-tighter">Fullscreen Required</h2>
+          <p className="text-battle-muted mb-8 max-w-md">
+            To ensure a fair competition, this battle must be played in fullscreen mode. 
+            Exiting fullscreen may result in disqualification.
+          </p>
+          <button 
+            onClick={() => document.documentElement.requestFullscreen()}
+            className="bg-battle-accent text-white px-10 py-4 rounded-xl font-black shadow-[0_0_30px_rgba(255,237,0,0.3)] hover:scale-105 transition-all"
+          >
+            ENTER FULLSCREEN
+          </button>
+        </div>
       )}
     </div>
   );
