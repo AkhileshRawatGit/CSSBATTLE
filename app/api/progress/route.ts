@@ -23,18 +23,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ progress: allProgress });
     }
 
-    // Find existing progress or create new one (Start)
-    let progress = await Progress.findOne({ userId: user.userId, challengeId });
-    
-    if (!progress) {
-      progress = await Progress.create({
-        userId: user.userId,
-        challengeId,
-        startTime: new Date(),
-        tabSwitches: 0,
-        isFinished: false,
-      });
-    }
+    // Find existing progress or create new one atomically (Start)
+    const progress = await Progress.findOneAndUpdate(
+      { userId: user.userId, challengeId },
+      { 
+        $setOnInsert: { 
+          userId: user.userId, 
+          challengeId, 
+          startTime: new Date(),
+          tabSwitches: 0,
+          isFinished: false 
+        } 
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     return NextResponse.json({ progress });
   } catch (error: unknown) {
