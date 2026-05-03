@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
           <html>
             <head>
               <style>
-                * { margin: 0; padding: 0; }
-                body { width: 400px; height: 300px; overflow: hidden; background: #ffffff; }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                html, body { width: 400px; height: 300px; overflow: hidden; background: #ffffff; }
               </style>
             </head>
             <body>

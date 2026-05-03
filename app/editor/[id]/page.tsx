@@ -385,8 +385,8 @@ export default function EditorPage() {
           </div>
 
           {/* Content (Canvas Area) */}
-          <div className="flex-1 flex flex-col items-center pt-8 bg-[#0a0a0f]">
-            <div className="w-[400px] h-[300px] shadow-2xl relative mb-12">
+          <div className="flex-1 flex flex-col items-center pt-8 px-6 pb-6 bg-[#0a0a0f]">
+            <div className="w-[400px] h-[300px] bg-white shadow-2xl relative mb-8 overflow-hidden">
               {compareMode ? (
                 <CompareSlider
                   targetSrc={challenge.image}
@@ -466,8 +466,8 @@ export default function EditorPage() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-6 flex flex-col items-center">
-            <div className="w-[400px] h-[300px] bg-white shadow-2xl overflow-hidden rounded-sm mb-8">
+          <div className="flex-1 pt-8 px-6 pb-6 flex flex-col items-center">
+            <div className="w-[400px] h-[300px] bg-white shadow-2xl overflow-hidden mb-8">
               <img src={challenge.image} alt="Target" className="w-full h-full object-cover" />
             </div>
 
