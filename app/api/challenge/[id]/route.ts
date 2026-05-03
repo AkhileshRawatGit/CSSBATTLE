@@ -36,10 +36,40 @@ export async function PUT(
 
     await dbConnect();
 
-    const body = await request.json();
+    const contentType = request.headers.get('content-type') || '';
+    let updateData: any = {};
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      
+      const title = formData.get('title') as string;
+      if (title) updateData.title = title;
+      
+      const description = formData.get('description') as string;
+      if (description !== null) updateData.description = description;
+      
+      const difficulty = formData.get('difficulty') as string;
+      if (difficulty) updateData.difficulty = difficulty;
+      
+      const tags = formData.get('tags') as string;
+      if (tags) updateData.tags = tags.split(',').map((t: string) => t.trim());
+      
+      const timeLimitStr = formData.get('timeLimit') as string;
+      if (timeLimitStr) updateData.timeLimit = parseInt(timeLimitStr);
+      
+      const file = formData.get('image') as File | null;
+      if (file && file.size > 0) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        updateData.image = `data:${file.type};base64,${buffer.toString('base64')}`;
+      }
+    } else {
+      updateData = await request.json();
+    }
+
     const challenge = await Challenge.findByIdAndUpdate(
       params.id,
-      body,
+      updateData,
       { new: true, runValidators: true }
     );
 

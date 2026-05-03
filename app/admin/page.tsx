@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [tags, setTags] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -69,10 +70,49 @@ export default function AdminPage() {
     }
   };
 
+  const cancelEdit = () => {
+    setTitle('');
+    setDescription('');
+    setTags('');
+    setDifficulty('medium');
+    setTimeLimit('30');
+    setImageFile(null);
+    setPreview('');
+    setEditingId(null);
+  };
+
+  const handleEdit = async (id: string) => {
+    const challenge = challenges.find((c) => c._id === id);
+    if (!challenge) return;
+    
+    try {
+      const res = await fetch(`/api/challenge/${id}`);
+      const data = await res.json();
+      if (data.challenge) {
+        const c = data.challenge;
+        setTitle(c.title || '');
+        setDescription(c.description || '');
+        setDifficulty(c.difficulty || 'medium');
+        setTags(c.tags ? c.tags.join(', ') : '');
+        setTimeLimit(c.timeLimit ? c.timeLimit.toString() : '30');
+        setPreview(c.image || '');
+        setImageFile(null);
+        setEditingId(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err) {
+      setMessage('❌ Failed to fetch challenge details');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile || !title) {
+    if (!editingId && (!imageFile || !title)) {
       setMessage('❌ Title and image are required');
+      return;
+    }
+    if (editingId && !title) {
+      setMessage('❌ Title is required');
       return;
     }
 
@@ -86,28 +126,36 @@ export default function AdminPage() {
       formData.append('difficulty', difficulty);
       formData.append('tags', tags);
       formData.append('timeLimit', timeLimit);
-      formData.append('image', imageFile);
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
 
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
+      const url = editingId ? `/api/challenge/${editingId}` : '/api/admin/upload';
+      const method = editingId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       const data = await res.json();
       if (res.ok) {
-        setMessage('✅ Challenge created successfully!');
-        setTitle('');
-        setDescription('');
-        setTags('');
-        setDifficulty('medium');
-        setImageFile(null);
-        setPreview('');
+        setMessage(editingId ? '✅ Challenge updated successfully!' : '✅ Challenge created successfully!');
+        
+        // Update list
+        if (editingId) {
+          setChallenges(prev => prev.map(c => c._id === editingId ? { ...c, title: data.challenge.title, difficulty: data.challenge.difficulty, timeLimit: data.challenge.timeLimit, image: data.challenge.image } : c));
+        } else {
+          setChallenges(prev => [data.challenge, ...prev]);
+        }
+        
+        cancelEdit();
       } else {
         setMessage(`❌ ${data.error}`);
       }
     } catch {
-      setMessage('❌ Upload failed');
+      setMessage(editingId ? '❌ Update failed' : '❌ Upload failed');
     } finally {
       setUploading(false);
     }
@@ -253,9 +301,17 @@ export default function AdminPage() {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* ─── Add Challenge Form ─── */}
             <div className="card p-6">
-              <h2 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
-                <span className="text-battle-accent">+</span> Add New Challenge
-              </h2>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <span className="text-battle-accent">{editingId ? '✏️' : '+'}</span> 
+                  {editingId ? 'Edit Challenge' : 'Add New Challenge'}
+                </h2>
+                {editingId && (
+                  <button onClick={cancelEdit} className="text-sm text-battle-muted hover:text-white transition-colors">
+                    Cancel
+                  </button>
+                )}
+              </div>
 
               {message && (
                 <div className={`text-sm px-4 py-3 rounded-lg mb-4 ${message.startsWith('✅')
@@ -330,7 +386,7 @@ export default function AdminPage() {
 
                 {/* Image upload */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-battle-text">Target Image *</label>
+                  <label className="text-sm font-medium text-battle-text">Target Image {editingId ? '(Optional, select to change)' : '*'}</label>
                   <label
                     htmlFor="admin-image"
                     className={`flex flex-col items-center justify-center h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${preview
@@ -367,10 +423,10 @@ export default function AdminPage() {
                 >
                   {uploading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <div className="spinner" /> Uploading…
+                      <div className="spinner" /> {editingId ? 'Updating…' : 'Uploading…'}
                     </span>
                   ) : (
-                    '+ Add Challenge'
+                    editingId ? 'Update Challenge' : '+ Add Challenge'
                   )}
                 </button>
               </form>
@@ -448,6 +504,15 @@ export default function AdminPage() {
                           )}
                         </button>
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                          <button
+                            onClick={() => handleEdit(c._id)}
+                            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                            title="Edit"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
                           <button
                             onClick={() => router.push(`/editor/${c._id}`)}
                             className="text-xs text-battle-purple hover:text-purple-300 transition-colors"
