@@ -77,101 +77,119 @@ export async function POST(request: NextRequest) {
     }
 
     // --- PUPPETEER SCREENSHOT & COMPARISON (Limited Concurrency) ---
-    const { comparisonResult, userBase64 } = await submissionLimiter.run(async () => {
-      const browser = await getBrowser();
-      const page = await browser.newPage();
+    let puppeteerResult;
+    let attempts = 2;
+    while (attempts > 0) {
       try {
-        await page.setViewport({ width: 400, height: 300, deviceScaleFactor: 1 });
-        
-        // Render
-        await page.setContent(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                html, body { width: 400px; height: 300px; overflow: hidden; background: #ffffff; }
-              </style>
-            </head>
-            <body>
-              ${code}
-            </body>
-          </html>
-        `);
-        
-        await new Promise(r => setTimeout(r, 100)); // Paint tick
-
-        const userScreenshotBuffer = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: 400, height: 300 } }) as Buffer;
-        const uBase64 = `data:image/png;base64,${userScreenshotBuffer.toString('base64')}`;
-
-        // Execute native canvas pixel comparison inside Chrome
-        const comparisonResult = await page.evaluate(async (tBase64, uBase64) => {
-          const loadImg = (src: string) => new Promise<HTMLImageElement | null>((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => resolve(null);
-            img.src = src;
-          });
-          
-          const tImg = await loadImg(tBase64);
-          const uImg = await loadImg(uBase64);
-          
-          if (!tImg || !uImg) return null;
-
-          const c1 = document.createElement('canvas');
-          const c2 = document.createElement('canvas');
-          c1.width = c2.width = 400;
-          c1.height = c2.height = 300;
-          
-          const ctx1 = c1.getContext('2d');
-          const ctx2 = c2.getContext('2d');
-          if (!ctx1 || !ctx2) return null;
-
-          ctx1.fillStyle = '#ffffff'; ctx1.fillRect(0,0,400,300);
-          ctx2.fillStyle = '#ffffff'; ctx2.fillRect(0,0,400,300);
-
-          ctx1.drawImage(tImg, 0, 0, 400, 300);
-          ctx2.drawImage(uImg, 0, 0, 400, 300);
-
-          const d1 = ctx1.getImageData(0,0,400,300).data;
-          const d2 = ctx2.getImageData(0,0,400,300).data;
-
-          // Identify background color (assume top-left pixel)
-          const bgR = d1[0], bgG = d1[1], bgB = d1[2];
-          
-          let totalFgPixels = 0;
-          let matchedFgPixels = 0;
-          let totalBgPixels = 0;
-          let matchedBgPixels = 0;
-
-          for (let i = 0; i < d1.length; i += 4) {
-            const isBg = Math.abs(d1[i] - bgR) < 5 && 
-                         Math.abs(d1[i+1] - bgG) < 5 && 
-                         Math.abs(d1[i+2] - bgB) < 5;
+        puppeteerResult = await submissionLimiter.run(async () => {
+          const browser = await getBrowser();
+          const page = await browser.newPage();
+          try {
+            await page.setViewport({ width: 400, height: 300, deviceScaleFactor: 1 });
             
-            const isMatch = Math.abs(d1[i] - d2[i]) <= 27 &&
-                            Math.abs(d1[i+1] - d2[i+1]) <= 27 &&
-                            Math.abs(d1[i+2] - d2[i+2]) <= 27;
+            // Render
+            await page.setContent(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    html, body { width: 400px; height: 300px; overflow: hidden; background: #ffffff; }
+                  </style>
+                </head>
+                <body>
+                  ${code}
+                </body>
+              </html>
+            `);
             
-            if (isBg) {
-              totalBgPixels++;
-              if (isMatch) matchedBgPixels++;
-            } else {
-              totalFgPixels++;
-              if (isMatch) matchedFgPixels++;
-            }
+            await new Promise(r => setTimeout(r, 100)); // Paint tick
+
+            const userScreenshotBuffer = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: 400, height: 300 } }) as Buffer;
+            const uBase64 = `data:image/png;base64,${userScreenshotBuffer.toString('base64')}`;
+
+            // Execute native canvas pixel comparison inside Chrome
+            const comparisonResult = await page.evaluate(async (tBase64, uBase64) => {
+              const loadImg = (src: string) => new Promise<HTMLImageElement | null>((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = src;
+              });
+              
+              const tImg = await loadImg(tBase64);
+              const uImg = await loadImg(uBase64);
+              
+              if (!tImg || !uImg) return null;
+
+              const c1 = document.createElement('canvas');
+              const c2 = document.createElement('canvas');
+              c1.width = c2.width = 400;
+              c1.height = c2.height = 300;
+              
+              const ctx1 = c1.getContext('2d');
+              const ctx2 = c2.getContext('2d');
+              if (!ctx1 || !ctx2) return null;
+
+              ctx1.fillStyle = '#ffffff'; ctx1.fillRect(0,0,400,300);
+              ctx2.fillStyle = '#ffffff'; ctx2.fillRect(0,0,400,300);
+
+              ctx1.drawImage(tImg, 0, 0, 400, 300);
+              ctx2.drawImage(uImg, 0, 0, 400, 300);
+
+              const d1 = ctx1.getImageData(0,0,400,300).data;
+              const d2 = ctx2.getImageData(0,0,400,300).data;
+
+              // Identify background color (assume top-left pixel)
+              const bgR = d1[0], bgG = d1[1], bgB = d1[2];
+              
+              let totalFgPixels = 0;
+              let matchedFgPixels = 0;
+              let totalBgPixels = 0;
+              let matchedBgPixels = 0;
+
+              for (let i = 0; i < d1.length; i += 4) {
+                const isBg = Math.abs(d1[i] - bgR) < 5 && 
+                             Math.abs(d1[i+1] - bgG) < 5 && 
+                             Math.abs(d1[i+2] - bgB) < 5;
+                
+                const isMatch = Math.abs(d1[i] - d2[i]) <= 27 &&
+                                Math.abs(d1[i+1] - d2[i+1]) <= 27 &&
+                                Math.abs(d1[i+2] - d2[i+2]) <= 27;
+                
+                if (isBg) {
+                  totalBgPixels++;
+                  if (isMatch) matchedBgPixels++;
+                } else {
+                  totalFgPixels++;
+                  if (isMatch) matchedFgPixels++;
+                }
+              }
+              
+              return { matchedFgPixels, totalFgPixels, matchedBgPixels, totalBgPixels };
+            }, targetBase64, uBase64);
+
+            if (!comparisonResult) throw new Error('Comparison failed');
+
+            return { comparisonResult, userBase64: uBase64 };
+          } finally {
+            try { await page.close(); } catch (e) { console.error('Error closing page:', e); }
           }
-          
-          return { matchedFgPixels, totalFgPixels, matchedBgPixels, totalBgPixels };
-        }, targetBase64, uBase64);
-
-        if (!comparisonResult) throw new Error('Comparison failed');
-
-        return { comparisonResult, userBase64: uBase64 };
-      } finally {
-        await page.close();
+        });
+        break; // If successful, break out of retry loop
+      } catch (err) {
+        attempts--;
+        console.error(`Puppeteer attempt failed. Retries left: ${attempts}`, err);
+        if (attempts === 0) throw err;
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retrying
       }
-    });
+    }
+
+    if (!puppeteerResult) {
+      throw new Error('Image decoding failed inside Puppeteer canvas');
+    }
+
+    const { comparisonResult, userBase64 } = puppeteerResult;
 
     if (!comparisonResult) {
       throw new Error('Image decoding failed inside Puppeteer canvas');

@@ -13,6 +13,10 @@ export default function CountdownTimer({ durationSeconds, onTimeUp, started }: C
   const [expired, setExpired] = useState(false);
 
   useEffect(() => {
+    setRemaining(durationSeconds);
+  }, [durationSeconds]);
+
+  useEffect(() => {
     if (!started || expired) return;
 
     const interval = setInterval(() => {

@@ -88,7 +88,7 @@ class ConcurrencyLimiter {
 
 // Global limiter to persist across HMR
 if (!cached.limiter) {
-  cached.limiter = new ConcurrencyLimiter(5);
+  cached.limiter = new ConcurrencyLimiter(1);
 }
 
 export const submissionLimiter = cached.limiter;

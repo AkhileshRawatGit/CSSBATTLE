@@ -139,7 +139,8 @@ export default function EditorPage() {
   }, [params.id, token, user, router]);
 
   const handleSubmit = useCallback(async (autoSubmit = false, isFinal = true) => {
-    if (submitted || submitting) return;
+    if (submitted) return;
+    if (submitting && !autoSubmit) return;
     if (!user || !token || !challenge) return;
 
     setSubmitting(true);
